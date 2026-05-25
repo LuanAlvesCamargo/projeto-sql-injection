@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Biblioteca (Vulnerável)</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+  <div class="vuln-banner">
+    ⚠️ VERSÃO VULNERÁVEL A SQL INJECTION — APENAS FINS DIDÁTICOS ⚠️
+  </div>
+
+  <!-- Navbar ----------------------------------------------- -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      📚 Biblioteca
+      <span class="badge-vuln">Vulnerável</span>
+    </div>
+    <ul class="navbar-links">
+      <li><a href="{{ url_for('dashboard') }}" class="active">Dashboard</a></li>
+      <li><a href="{{ url_for('books') }}">Livros</a></li>
+    </ul>
+    <div class="navbar-user">
+      <span>{{ session.username }}</span>
+      <span class="role-badge {{ session.role }}">{{ session.role }}</span>
+      <a href="{{ url_for('logout') }}" class="btn btn-danger btn-sm">Sair</a>
+    </div>
+  </nav>
+
+  <!-- Conteúdo --------------------------------------------- -->
+  <div class="container">
+
+    <!-- Flash messages ------------------------------------- -->
+    <div class="flash-messages">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+    </div>
+
+    <div class="page-header">
+      <h1 class="page-title">Bem-vindo, <span>{{ session.username }}</span></h1>
+    </div>
+
+    <!-- Cards de estatísticas ------------------------------ -->
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-title">Total de Livros</div>
+        <div class="card-value">{{ total_books }}</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Total de Usuários</div>
+        <div class="card-value">{{ total_users }}</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Seu Perfil</div>
+        <div class="card-value" style="font-size:28px; text-transform:capitalize;">{{ session.role }}</div>
+      </div>
+    </div>
+
+    <!-- Aviso de vulnerabilidade didático ------------------- -->
+    <div class="sql-box">
+      <div class="sql-label">⚠️ Como atacar esta aplicação</div>
+      <strong>1. Login bypass:</strong><br/>
+      &nbsp;&nbsp; Usuário: <code>' OR '1'='1</code> &nbsp; Senha: <code>' OR '1'='1</code><br/>
+      &nbsp;&nbsp; Query gerada: <code>SELECT * FROM users WHERE username='' OR '1'='1' AND password='' OR '1'='1'</code><br/><br/>
+
+      <strong>2. Comentário SQL:</strong><br/>
+      &nbsp;&nbsp; Usuário: <code>admin'--</code> &nbsp; Senha: <em>(qualquer)</em><br/>
+      &nbsp;&nbsp; Query gerada: <code>SELECT * FROM users WHERE username='admin'--' AND password='...'</code><br/><br/>
+
+      <strong>3. Busca maliciosa:</strong><br/>
+      &nbsp;&nbsp; Pesquise por: <code>%' OR '1'='1</code><br/>
+      &nbsp;&nbsp; Retorna <strong>todos</strong> os livros independente do título.
+    </div>
+
+    <a href="{{ url_for('books') }}" class="btn btn-primary">
+      📖 Ver Acervo de Livros
+    </a>
+
+  </div>
+
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

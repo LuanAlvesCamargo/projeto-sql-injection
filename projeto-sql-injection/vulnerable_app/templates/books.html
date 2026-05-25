@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Livros — Biblioteca (Vulnerável)</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+  <div class="vuln-banner">
+    ⚠️ VERSÃO VULNERÁVEL A SQL INJECTION — APENAS FINS DIDÁTICOS ⚠️
+  </div>
+
+  <nav class="navbar">
+    <div class="navbar-brand">
+      📚 Biblioteca
+      <span class="badge-vuln">Vulnerável</span>
+    </div>
+    <ul class="navbar-links">
+      <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+      <li><a href="{{ url_for('books') }}" class="active">Livros</a></li>
+    </ul>
+    <div class="navbar-user">
+      <span>{{ session.username }}</span>
+      <span class="role-badge {{ session.role }}">{{ session.role }}</span>
+      <a href="{{ url_for('logout') }}" class="btn btn-danger btn-sm">Sair</a>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <div class="flash-messages">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+    </div>
+
+    <div class="page-header">
+      <h1 class="page-title">📖 Acervo de <span>Livros</span></h1>
+      {% if session.role == 'admin' %}
+        <a href="{{ url_for('add_book') }}" class="btn btn-success">+ Adicionar Livro</a>
+      {% endif %}
+    </div>
+
+    <!-- Busca vulnerável ------------------------------------ -->
+    <form method="GET" action="{{ url_for('books') }}" class="search-bar">
+      <input
+        class="form-control"
+        type="text"
+        name="search"
+        value="{{ search }}"
+        placeholder="⚠️ Busca vulnerável — tente: %' OR '1'='1"
+        autocomplete="off"
+      />
+      <button type="submit" class="btn btn-primary">Buscar</button>
+      {% if search %}
+        <a href="{{ url_for('books') }}" class="btn btn-secondary">Limpar</a>
+      {% endif %}
+    </form>
+
+    <!-- Aviso de SQL na busca ------------------------------ -->
+    <div class="sql-box" style="margin-bottom:20px;">
+      <div class="sql-label">Query executada</div>
+      {% if search %}
+        SELECT * FROM books WHERE title LIKE '<strong>%{{ search }}%</strong>' ORDER BY title
+      {% else %}
+        SELECT * FROM books ORDER BY title
+      {% endif %}
+    </div>
+
+    <!-- Tabela de livros ------------------------------------ -->
+    {% if books %}
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Título</th>
+              <th>Autor</th>
+              <th>Categoria</th>
+              <th>Ano</th>
+              <th>Qtd</th>
+              {% if session.role == 'admin' %}<th>Ações</th>{% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for book in books %}
+              <tr>
+                <td style="color:var(--muted); font-family:var(--mono);">{{ book.id }}</td>
+                <td><strong>{{ book.title }}</strong></td>
+                <td>{{ book.author }}</td>
+                <td><span class="badge badge-cat">{{ book.category }}</span></td>
+                <td style="font-family:var(--mono);">{{ book.publish_year }}</td>
+                <td><span class="badge badge-qty">{{ book.quantity }}</span></td>
+                {% if session.role == 'admin' %}
+                  <td>
+                    <div class="td-actions">
+                      <a href="{{ url_for('edit_book', book_id=book.id) }}" class="btn btn-secondary btn-sm">✏️ Editar</a>
+                      <a href="{{ url_for('delete_book', book_id=book.id) }}"
+                         class="btn btn-danger btn-sm"
+                         onclick="return confirmDelete('{{ book.title }}')">🗑️ Excluir</a>
+                    </div>
+                  </td>
+                {% endif %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="card" style="text-align:center; color:var(--muted); padding:48px;">
+        Nenhum livro encontrado.
+      </div>
+    {% endif %}
+
+  </div>
+
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

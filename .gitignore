@@ -27,3 +27,9 @@ instance/
 
 # System files
 .DS_Store
+
+venv/
+__pycache__/
+*.pyc
+.vscode/
+.env
