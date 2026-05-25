@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Books</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+<body>
+
+    <nav>
+
+        <h2>Library Books</h2>
+
+        <div>
+
+            <span>
+                {{ username }}
+            </span>
+
+            <a href="/dashboard">
+                Dashboard
+            </a>
+
+            <a href="/logout">
+                Logout
+            </a>
+
+        </div>
+
+    </nav>
+
+    <div class="container">
+
+        <form class="search-form" method="GET" action="/books">
+
+            <input type="text" name="search" placeholder="Search books by title...">
+
+            <button type="submit">
+                Search
+            </button>
+
+        </form>
+
+        {% if role == "admin" %}
+
+        <a class="add-button" href="/books/add">
+            Add Book
+        </a>
+
+        {% endif %}
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>Title</th>
+
+                    <th>Author</th>
+
+                    <th>Category</th>
+
+                    <th>Year</th>
+
+                    <th>Quantity</th>
+
+                    {% if role == "admin" %}
+                    <th>Actions</th>
+                    {% endif %}
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for book in books %}
+
+                <tr>
+
+                    <td>{{ book.id }}</td>
+
+                    <td>{{ book.title }}</td>
+
+                    <td>{{ book.author }}</td>
+
+                    <td>{{ book.category }}</td>
+
+                    <td>{{ book.publish_year }}</td>
+
+                    <td>{{ book.quantity }}</td>
+
+                    {% if role == "admin" %}
+
+                    <td class="actions">
+
+                        <a class="edit-btn" href="/books/edit/{{ book.id }}">
+                            Edit
+                        </a>
+
+                        <a class="delete-btn" href="/books/delete/{{ book.id }}">
+                            Delete
+                        </a>
+
+                    </td>
+
+                    {% endif %}
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</body>
+
+</html>
