@@ -13,10 +13,8 @@ app.secret_key = os.getenv("SECRET_KEY")
 
 
 
-# ==========================================
-# LOGIN
-# ==========================================
 
+# LOGIN
 @app.route("/", methods=["GET", "POST"])
 def login():
 
@@ -28,10 +26,8 @@ def login():
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
 
-        # ==========================================
+        
         # VULNERABLE QUERY
-        # ==========================================
-
         query = f"""
         SELECT * FROM users
         WHERE username = '{username}'
@@ -63,10 +59,8 @@ def login():
     return render_template("login.html")
 
 
-# ==========================================
-# DASHBOARD
-# ==========================================
 
+# DASHBOARD
 @app.route("/dashboard")
 def dashboard():
 
@@ -91,10 +85,8 @@ def dashboard():
     )
 
 
-# ==========================================
-# LIST BOOKS
-# ==========================================
 
+# LIST BOOKS
 @app.route("/books")
 def books():
 
@@ -106,10 +98,8 @@ def books():
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
 
-    # ==========================================
+    
     # VULNERABLE SEARCH
-    # ==========================================
-
     query = f"""
     SELECT * FROM books
     WHERE title LIKE '%{search}%'
@@ -133,10 +123,8 @@ def books():
     )
 
 
-# ==========================================
-# ADD BOOK
-# ==========================================
 
+# ADD BOOK
 @app.route("/books/add", methods=["GET", "POST"])
 def add_book():
 
@@ -186,10 +174,8 @@ def add_book():
     return render_template("add_book.html")
 
 
-# ==========================================
-# EDIT BOOK
-# ==========================================
 
+# EDIT BOOK
 @app.route("/books/edit/<int:id>", methods=["GET", "POST"])
 def edit_book(id):
 
@@ -248,10 +234,8 @@ def edit_book(id):
     )
 
 
-# ==========================================
-# DELETE BOOK
-# ==========================================
 
+# DELETE BOOK
 @app.route("/books/delete/<int:id>")
 def delete_book(id):
 
@@ -279,10 +263,8 @@ def delete_book(id):
     return redirect("/books")
 
 
-# ==========================================
-# LOGOUT
-# ==========================================
 
+# LOGOUT
 @app.route("/logout")
 def logout():
 
@@ -291,9 +273,7 @@ def logout():
     return redirect("/")
 
 
-# ==========================================
-# RUN APPLICATION
-# ==========================================
 
+# RUN APPLICATION
 if __name__ == "__main__":
     app.run(debug=True)
