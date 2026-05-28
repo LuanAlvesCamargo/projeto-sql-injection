@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual de Arquitetura: Segurança de Dados e Prevenção de SQLi</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fontes Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        code,
+        pre {
+            font-family: 'Fira Code', monospace;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .blueprint-grid {
+            background-image:
+                linear-gradient(rgba(15, 23, 42, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(15, 23, 42, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Top Navigation Bar -->
+    <header
+        class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm px-4 lg:px-8 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div
+                class="w-10 h-10 bg-indigo-900 rounded-lg flex items-center justify-center text-white shadow-md shadow-indigo-900/30">
+                <i class="fa-solid fa-compass-drafting text-lg"></i>
+            </div>
+            <div>
+                <h1 class="font-extrabold text-slate-900 tracking-tight text-sm md:text-base">Portal de Arquitetura de
+                    Segurança de Dados</h1>
+                <p class="text-[11px] text-slate-500 font-medium uppercase tracking-wider">Normas de Engenharia de
+                    Sistemas contra Injeção de Código</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <!-- Search Input -->
+            <div class="relative hidden md:block">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                </span>
+                <input type="text" id="doc-search" oninput="filterDocumentation()"
+                    placeholder="Pesquisar manual técnico..."
+                    class="w-72 pl-9 pr-4 py-1.5 text-xs bg-slate-100 border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:bg-white transition-all">
+            </div>
+
+            <span
+                class="text-xs font-semibold px-2.5 py-1 bg-indigo-50 text-indigo-900 border border-indigo-200 rounded-full flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse"></span> v2.1
+            </span>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="flex-1 flex flex-col lg:flex-row max-w-[1700px] w-full mx-auto">
+
+        <!-- Sidebar Navigation -->
+        <aside
+            class="w-full lg:w-80 shrink-0 border-b lg:border-b-0 lg:border-r border-slate-200 bg-white p-6 lg:sticky lg:top-[65px] lg:h-[calc(100vh-65px)] overflow-y-auto">
+
+            <!-- Mobile Search Bar -->
+            <div class="relative block md:hidden mb-6">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                </span>
+                <input type="text" id="doc-search-mobile" oninput="filterDocumentationMobile()"
+                    placeholder="Pesquisar manual..."
+                    class="w-full pl-9 pr-4 py-2 text-sm bg-slate-100 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:bg-white transition-all">
+            </div>
+
+            <nav class="space-y-6">
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">1. Fundamentos
+                        Arquitetônicos</h3>
+                    <ul class="space-y-1">
+                        <li><a href="#intro"
+                                class="nav-link flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-indigo-900 hover:bg-slate-50 rounded-lg font-medium transition">O
+                                Projeto Arquitetônico</a></li>
+                        <li><a href="#executavel"
+                                class="nav-link flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-indigo-900 hover:bg-slate-50 rounded-lg font-medium transition">A
+                                Internet Executável</a></li>
+                        <li><a href="#triade-cia"
+                                class="nav-link flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-indigo-900 hover:bg-slate-50 rounded-lg font-medium transition">A
+                                Tríade CIA</a></li>
+                        <li><a href="#security-design"
+                                class="nav-link flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-indigo-900 hover:bg-slate-50 rounded-lg font-medium transition">Segurança
+                                por Design</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">2. Anatomia e Taxonomia
+                        de Ameaças</h3>
+                    <ul class="space-y-1">
+                        <li><a href="#mecanica-sqli"
+                                class="nav-link flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-indigo-900 hover:bg-slate-50 rounded-lg font-medium transition">Subversão
+                                de Semântica</a></li>
+                        <li><a href="#vetores-sqli"
+                                class="nav-link flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-indigo-900 hover:bg-slate-50 rounded-lg font-medium transition">Taxonomia
+                                de Injeções</a></li>
+                        <li><a href="#privilegios"
+                                class="nav-link flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-indigo-900 hover:bg-slate-50 rounded-lg font-medium transition">Privilégios
+                                e Explosão</a></li>
+                        <li><a href="#metadados"
+                                class="nav-link flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-indigo-900 hover:bg-slate-50 rounded-lg font-medium transition">Perigo
+                                dos Metadados</a></li>
+                        <li><a href="#impacto-cia"
+                                class="nav-link flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-indigo-900 hover:bg-slate-50 rounded-lg font-medium transition">Impacto
+                                Letal na CIA</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">3. Padrões de Mitigação
+                    </h3>
+                    <ul class="space-y-1">
+                        <li><a href="#diagnostico-estrutural"
+                                class="nav-link flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-indigo-900 hover:bg-slate-50 rounded-lg font-medium transition">Eficácia
+                                das Técnicas</a></li>
+                        <li><a href="#prepared-statements"
+                                class="nav-link flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-indigo-900 hover:bg-slate-50 rounded-lg font-medium transition">Prepared
+                                Statements</a></li>
+                        <li><a href="#whitelisting"
+                                class="nav-link flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-indigo-900 hover:bg-slate-50 rounded-lg font-medium transition">Whitelisting
+                                & Regex</a></li>
+                        <li><a href="#defesa-profundidade"
+                                class="nav-link flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-indigo-900 hover:bg-slate-50 rounded-lg font-medium transition">Defesa
+                                em Profundidade</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">4. Governança e
+                        Verificação</h3>
+                    <ul class="space-y-1">
+                        <li><a href="#sdlc-seguro"
+                                class="nav-link flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-indigo-900 hover:bg-slate-50 rounded-lg font-medium transition">SBD
+                                & Conformidade</a></li>
+                        <li><a href="#conclusao-rigor"
+                                class="nav-link flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-indigo-900 hover:bg-slate-50 rounded-lg font-medium transition">Rigor
+                                Arquitetônico</a></li>
+                        <li><a href="#checklist-auditoria"
+                                class="nav-link flex items-center gap-2 px-3 py-3 text-sm text-indigo-900 bg-indigo-50 font-bold rounded-lg transition"><i
+                                    class="fa-solid fa-clipboard-check"></i>Checklist de Auditoria</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 bg-white p-6 md:p-10 lg:p-16 overflow-y-auto">
+
+            <!-- Toast Notification -->
+            <div id="toast"
+                class="fixed bottom-5 right-5 z-50 bg-slate-900 text-white text-xs px-4 py-2.5 rounded-lg shadow-lg flex items-center gap-2 transition-all transform translate-y-20 opacity-0 pointer-events-none">
+                <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                <span id="toast-message">Texto copiado!</span>
+            </div>
+
+            <!-- Content Container -->
+            <div id="doc-content-wrapper" class="max-w-4xl space-y-20">
+
+                <!-- Section 1 / Slide 1 -->
+                <section id="intro" class="doc-section scroll-mt-24">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span
+                            class="px-2 py-0.5 bg-indigo-100 text-indigo-900 text-[10px] font-bold rounded uppercase">Slide
+                            1</span>
+                        <span class="text-xs text-slate-400">Abertura</span>
+                    </div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 mb-4">O Projeto Arquitetônico da Segurança de
+                        Dados</h2>
+                    <p class="text-slate-600 leading-relaxed mb-6">
+                        A segurança de dados e aplicações deve ser tratada como um autêntico **projeto estrutural de
+                        engenharia**. Na imagem conceitual da planta arquitetônica de um datacenter, uma fissura por
+                        estresse no pilar de fundação (<em>stress fracture / potential weak point</em>) demonstra
+                        graficamente que uma estrutura monumental pode ruir por completo se suas bases de dados e
+                        mecanismos de acesso forem deficientes. Este manual aborda de forma cirúrgica como precaver
+                        fraturas digitais por meio do rigor estrutural contra o SQL Injection.
+                    </p>
+                    <div
+                        class="border border-indigo-100 rounded-xl bg-indigo-50/40 p-5 flex flex-col md:flex-row gap-4 items-center">
+                        <div
+                            class="w-12 h-12 rounded-full bg-indigo-900 flex items-center justify-center text-white shrink-0 shadow-sm">
+                            <i class="fa-solid fa-compass-drafting text-lg"></i>
+                        </div>
+                        <div class="text-xs text-indigo-900 leading-relaxed">
+                            <strong>Abordagem de Projeto:</strong> Desenvolver aplicações seguras não se resume a
+                            corrigir vulnerabilidades encontradas pós-implementação; exige o planejamento milimétrico da
+                            passagem de fluxos semânticos e da integridade física de comandos desde a primeira planta do
+                            sistema.
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 2 / Slide 2 -->
+                <section id="executavel" class="doc-section scroll-mt-24">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span
+                            class="px-2 py-0.5 bg-indigo-100 text-indigo-900 text-[10px] font-bold rounded uppercase">Slide
+                            2</span>
+                        <span class="text-xs text-slate-400">Ambiente Executável</span>
+                    </div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 mb-4">A Internet como um Ambiente Essencialmente
+                        Executável</h2>
+                    <p class="text-slate-600 leading-relaxed mb-6">
+                        A rede mundial sofreu uma metamorfose drástica. A transição histórica de paradigmas redefiniu o
+                        papel estratégico do armazenamento de dados e a responsabilidade civil do desenvolvedor:
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-6">
+                        <div class="border border-slate-200 rounded-xl p-5 bg-slate-50/50">
+                            <div class="text-indigo-900 font-bold text-sm mb-2"><i
+                                    class="fa-solid fa-file-invoice mr-2"></i>Web Estática</div>
+                            <p class="text-xs text-slate-500 leading-relaxed">
+                                Era puramente informativa, comparável a uma biblioteca remota para leitura de arquivos
+                                estáticos. Sem tráfego dinâmico ou subversão de lógica.
+                            </p>
+                        </div>
+                        <div class="border border-slate-200 rounded-xl p-5 bg-slate-50/50">
+                            <div class="text-indigo-900 font-bold text-sm mb-2"><i
+                                    class="fa-solid fa-cloud mr-2"></i>Web 2.0 / Cloud</div>
+                            <p class="text-xs text-slate-500 leading-relaxed">
+                                Serviços complexos e aplicações distribuídas interconectadas de alto valor, operando
+                                como ecossistemas dinâmicos altamente executáveis.
+                            </p>
+                        </div>
+                        <div class="border border-indigo-200 rounded-xl p-5 bg-indigo-50/40">
+                            <div class="text-indigo-900 font-bold text-sm mb-2"><i
+                                    class="fa-solid fa-box-archive mr-2"></i>Ativo Estratégico</div>
+                            <p class="text-xs text-indigo-950 leading-relaxed">
+                                Sob as diretrizes da <strong>LGPD</strong> e do <strong>Marco Civil da
+                                    Internet</strong>, os dados são o novo patrimônio organizacional; protegê-los é
+                                imperativo de sobrevivência institucional.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 3 / Slide 3 -->
+                <section id="triade-cia" class="doc-section scroll-mt-24">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span
+                            class="px-2 py-0.5 bg-indigo-100 text-indigo-900 text-[10px] font-bold rounded uppercase">Slide
+                            3</span>
+                        <span class="text-xs text-slate-400">Tríade CIA</span>
+                    </div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 mb-4">A Tríade CIA define a integridade estrutural
+                        da informação</h2>
+                    <p class="text-slate-600 leading-relaxed mb-6">
+                        Na engenharia estrutural de sistemas de informação, as diretrizes internacionais baseadas na
+                        norma **NBR ISO/IEC 27002** assentam os alicerces teóricos em uma pirâmide perfeita
+                        tridimensional composta por três propriedades indissociáveis:
+                    </p>
+
+                    <!-- Interactive CIA Pyramid Diagram -->
+                    <div class="bg-slate-50 rounded-2xl border border-slate-200 p-6 md:p-8 my-6">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                            <div class="md:col-span-5 flex justify-center">
+                                <!-- CSS Graphic representing the pyramid -->
+                                <div class="relative w-44 h-44 flex items-center justify-center">
+                                    <div
+                                        class="absolute inset-0 border-[22px] border-transparent border-b-indigo-900/10 transform rotate-45 scale-75">
+                                    </div>
+                                    <div
+                                        class="absolute w-0 h-0 border-l-[80px] border-l-transparent border-r-[80px] border-r-transparent border-b-[140px] border-b-indigo-900 flex items-end justify-center">
+                                        <span class="text-white font-extrabold text-xs mb-3">CIA</span>
+                                    </div>
+                                    <div class="absolute -top-2 w-4 h-4 bg-indigo-600 rounded-full animate-ping"></div>
+                                </div>
+                            </div>
+                            <div class="md:col-span-7 space-y-3">
+                                <h4 class="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-1">Pilares
+                                    de Proteção da Informação</h4>
+                                <div class="p-3 bg-white border border-slate-200 rounded-xl hover:border-indigo-400 transition cursor-pointer"
+                                    onclick="toggleCIADetail('c')">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-xs font-bold text-slate-800"><i
+                                                class="fa-solid fa-lock text-indigo-600 mr-2"></i>Confidencialidade</span>
+                                        <i id="icon-cia-c"
+                                            class="fa-solid fa-chevron-down text-xs text-slate-400 transition-transform"></i>
+                                    </div>
+                                    <p id="desc-cia-c" class="text-[11px] text-slate-500 mt-1 hidden">
+                                        Acesso restrito única e exclusivamente a usuários legítimos e processos
+                                        autorizados, mitigando vazamentos indesejados.
+                                    </p>
+                                </div>
+                                <div class="p-3 bg-white border border-slate-200 rounded-xl hover:border-emerald-400 transition cursor-pointer"
+                                    onclick="toggleCIADetail('i')">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-xs font-bold text-slate-800"><i
+                                                class="fa-solid fa-shield-halved text-emerald-600 mr-2"></i>Integridade</span>
+                                        <i id="icon-cia-i"
+                                            class="fa-solid fa-chevron-down text-xs text-slate-400 transition-transform"></i>
+                                    </div>
+                                    <p id="desc-cia-i" class="text-[11px] text-slate-500 mt-1 hidden">
+                                        Garantia de precisão, confiabilidade e completude dos dados históricos,
+                                        blindados de ponta a ponta contra modificações acidentais ou maliciosas.
+                                    </p>
+                                </div>
+                                <div class="p-3 bg-white border border-slate-200 rounded-xl hover:border-amber-400 transition cursor-pointer"
+                                    onclick="toggleCIADetail('a')">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-xs font-bold text-slate-800"><i
+                                                class="fa-solid fa-clock text-amber-600 mr-2"></i>Disponibilidade</span>
+                                        <i id="icon-cia-a"
+                                            class="fa-solid fa-chevron-down text-xs text-slate-400 transition-transform"></i>
+                                    </div>
+                                    <p id="desc-cia-a" class="text-[11px] text-slate-500 mt-1 hidden">
+                                        Sistemas operacionais e dados críticos prontos e acessíveis ininterruptamente
+                                        aos usuários legítimos.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 4 / Slide 4 -->
+                <section id="security-design" class="doc-section scroll-mt-24">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span
+                            class="px-2 py-0.5 bg-indigo-100 text-indigo-900 text-[10px] font-bold rounded uppercase">Slide
+                            4</span>
+                        <span class="text-xs text-slate-400">Paradigma de Design</span>
+                    </div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 mb-4">Segurança Tardia vs. Segurança por Design
+                    </h2>
+                    <p class="text-slate-600 leading-relaxed mb-6">
+                        Há um abismo conceitual entre o improviso defensivo e o planejamento integrado. O **Lado A**
+                        representa a *Segurança Tardia*: escorar fragilidades estruturais com remendos (como suportes
+                        improvisados de madeira em alvenarias rachadas). O **Lado B** ilustra a *Segurança por Design*
+                        (SBD): uma estrutura de aço robusta integrada às fundações digitais.
+                    </p>
+
+                    <!-- Comparative Table -->
+                    <div class="overflow-x-auto rounded-xl border border-slate-200 my-6">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100 border-b border-slate-200">
+                                    <th class="p-4 text-xs font-bold uppercase text-slate-600">Indicador Metodológico
+                                    </th>
+                                    <th class="p-4 text-xs font-bold uppercase text-slate-600">Lado A: Segurança Tardia
+                                    </th>
+                                    <th class="p-4 text-xs font-bold uppercase text-indigo-900">Lado B: Segurança por
+                                        Design</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 text-xs">
+                                <tr>
+                                    <td class="p-4 font-bold text-slate-700">Abordagem do SDLC</td>
+                                    <td class="p-4 text-red-600">Negligência no ciclo de vida; remendos inseridos
+                                        pós-compilação.</td>
+                                    <td class="p-4 text-emerald-700 font-medium">Controles introduzidos na fase de
+                                        especificação de requisitos (ISO/IEC 17799).</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-4 font-bold text-slate-700">Tratamento de Inputs</td>
+                                    <td class="p-4 text-red-600 font-medium">Confiança implícita e cega nos dados do
+                                        cliente final.</td>
+                                    <td class="p-4 text-emerald-700 font-medium">Todo parâmetro externo (URLs, forms,
+                                        cookies) é tratado como ameaça latente.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-4 font-bold text-slate-700">Taxa de Vulnerabilidade</td>
+                                    <td class="p-4 text-red-600"><strong>~30%</strong> das aplicações ativas com
+                                        vulnerabilidades de injeção.</td>
+                                    <td class="p-4 text-emerald-700 font-medium">Resiliência matemática e imunidade
+                                        estrutural de fábrica.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Section 5 / Slide 5 -->
+                <section id="mecanica-sqli" class="doc-section scroll-mt-24">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span
+                            class="px-2 py-0.5 bg-indigo-100 text-indigo-900 text-[10px] font-bold rounded uppercase">Slide
+                            5</span>
+                        <span class="text-xs text-slate-400">Anatomia do Erro</span>
+                    </div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 mb-4">Como o SQL Injection Subverte a Semântica de
+                        Execução</h2>
+                    <p class="text-slate-600 leading-relaxed mb-6">
+                        O SQLi não constitui uma falha física do banco de dados, mas sim um **erro grave de codificação
+                        lógica na aplicação**. Ocorre ao misturar dados externos do usuário diretamente na estrutura
+                        semântica dos comandos dinâmicos (por meio de concatenação descuidada).
+                    </p>
+
+                    <!-- Interactive Railway Track Simulator -->
+                    <div
+                        class="bg-indigo-950 text-indigo-100 rounded-2xl p-6 my-6 blueprint-grid relative overflow-hidden">
+                        <div class="absolute top-2 right-2 text-[9px] font-mono text-indigo-400">SIMULADOR SEMÂNTICO
+                            V1.0</div>
+                        <h4 class="text-sm font-extrabold tracking-wide mb-4 text-white uppercase"><i
+                                class="fa-solid fa-train-subway mr-2 text-indigo-400"></i>Simulador de Desvio de Trilho
+                            (Railway Switch)</h4>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                            <div class="space-y-3">
+                                <label class="text-xs font-bold text-indigo-200">Escolha o Input do Usuário:</label>
+                                <div class="flex flex-col gap-2">
+                                    <button onclick="setSimInput('normal')" id="btn-sim-normal"
+                                        class="text-left px-4 py-2.5 rounded-lg border text-xs font-medium transition-all bg-indigo-900/50 border-indigo-400 text-white">
+                                        <strong class="block">Input Limpo:</strong>
+                                        <code class="text-[11px] text-emerald-300">1042</code>
+                                    </button>
+                                    <button onclick="setSimInput('malicious')" id="btn-sim-malicious"
+                                        class="text-left px-4 py-2.5 rounded-lg border text-xs font-medium transition-all bg-indigo-900/10 border-indigo-700 hover:border-indigo-500">
+                                        <strong class="block text-red-300">Payload Malicioso:</strong>
+                                        <code class="text-[11px] text-red-300">1 OR 1=1 --</code>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="bg-indigo-900/40 rounded-xl p-4 border border-indigo-800">
+                                <div class="text-[10px] font-extrabold uppercase tracking-widest text-indigo-400 mb-2">
+                                    Trilho Semântico Executado</div>
+                                <div class="min-h-[60px] flex items-center bg-slate-950 p-3 rounded font-mono text-xs overflow-x-auto text-slate-200"
+                                    id="sim-query-display">
+                                    SELECT * FROM usuarios WHERE id = 1042
+                                </div>
+                                <div class="mt-3 flex items-center gap-2 text-xs" id="sim-status-display">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                    <span class="text-emerald-300 font-bold">Fluxo Esperado: Consulta o usuário de forma
+                                        isolada</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Python Code block demonstrating vulnerable concat -->
+                    <div class="border border-red-200 rounded-xl overflow-hidden shadow-sm my-6">
+                        <div class="bg-red-50 px-4 py-2 border-b border-red-100 flex justify-between items-center">
+                            <span class="text-xs font-bold text-red-700 uppercase tracking-wider"><i
+                                    class="fa-solid fa-triangle-exclamation mr-1.5"></i>Prática Altamente Vulnerável em
+                                Python</span>
+                            <button onclick="copyCode('py-vuln')"
+                                class="text-xs text-red-600 hover:text-red-800 font-semibold flex items-center gap-1"><i
+                                    class="fa-regular fa-copy"></i>Copiar</button>
+                        </div>
+                        <pre id="py-vuln" class="p-4 bg-slate-900 text-slate-100 text-xs overflow-x-auto"><code># VULNERABILIDADE: Concatenação de string dinâmica utilizando f-strings
+def consultar_cadastro_vulneravel(db_cursor, input_id):
+    # Se o input_id for "1 OR 1=1 --", a lógica da query é alterada
+    query_executada = f"SELECT * FROM usuarios WHERE id = {input_id}"
+    
+    # O banco executa o desvio e ignora o restante dos critérios de autenticação
+    db_cursor.execute(query_executada)
+    return db_cursor.fetchall()</code></pre>
+                    </div>
+                </section>
+
+                <!-- Section 6 / Slide 6 -->
+                <section id="vetores-sqli" class="doc-section scroll-mt-24">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span
+                            class="px-2 py-0.5 bg-indigo-100 text-indigo-900 text-[10px] font-bold rounded uppercase">Slide
+                            6</span>
+                        <span class="text-xs text-slate-400">Taxonomia de Injeções</span>
+                    </div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 mb-4">A Taxonomia das Injeções de Código</h2>
+                    <p class="text-slate-600 leading-relaxed mb-6">
+                        As ameaças de injeção de comandos não se manifestam de forma homogênea. Dependendo da
+                        visibilidade do canal de retorno, classificamos os vetores em três grandes grupos estruturais:
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-6">
+                        <div class="p-5 border border-slate-200 rounded-2xl hover:shadow-md transition duration-150">
+                            <div
+                                class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-950 flex items-center justify-center mb-3">
+                                <i class="fa-solid fa-network-wired text-lg"></i>
+                            </div>
+                            <h4 class="font-extrabold text-slate-900 text-sm mb-1.5">In-Band (Clássico)</h4>
+                            <p class="text-xs text-slate-500 leading-relaxed">
+                                O atacante explora o mesmo canal de comunicação ativo para injetar comandos e extrair
+                                metadados (como ataques baseados em erro e Tautologias de autenticação).
+                            </p>
+                        </div>
+
+                        <div class="p-5 border border-slate-200 rounded-2xl hover:shadow-md transition duration-150">
+                            <div
+                                class="w-10 h-10 rounded-lg bg-amber-50 text-amber-950 flex items-center justify-center mb-3">
+                                <i class="fa-solid fa-eye-slash text-lg"></i>
+                            </div>
+                            <h4 class="font-extrabold text-slate-900 text-sm mb-1.5">Blind / Inferencial</h4>
+                            <p class="text-xs text-slate-500 leading-relaxed">
+                                Nenhum retorno de dados é exibido. O atacante infere a estrutura lógica enviando
+                                perguntas lógicas booleanas (Verdadeiro/Falso) ou forçando pausas programadas no
+                                processador.
+                            </p>
+                        </div>
+
+                        <div class="p-5 border border-slate-200 rounded-2xl hover:shadow-md transition duration-150">
+                            <div
+                                class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-950 flex items-center justify-center mb-3">
+                                <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+                            </div>
+                            <h4 class="font-extrabold text-slate-900 text-sm mb-1.5">Segunda Ordem (Persistente)</h4>
+                            <p class="text-xs text-slate-500 leading-relaxed">
+                                O código malicioso entra inofensivo e é gravado de forma limpa. A execução ocorre
+                                posteriormente de forma indireta no processamento operacional interno da base.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 7 / Slide 7 -->
+                <section id="privilegios" class="doc-section scroll-mt-24">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span
+                            class="px-2 py-0.5 bg-indigo-100 text-indigo-900 text-[10px] font-bold rounded uppercase">Slide
+                            7</span>
+                        <span class="text-xs text-slate-400">Privilégios</span>
+                    </div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 mb-4">Privilégios Excessivos e o Raio de Explosão
+                    </h2>
+                    <p class="text-slate-600 leading-relaxed mb-6">
+                        O impacto operacional decorrente de uma falha de injeção é governado pelas credenciais
+                        utilizadas para conexão física ao banco de dados. Contas de superusuário (<code
+                            class="bg-slate-100 px-1 py-0.5 rounded text-indigo-900">sa / root</code>) transformam um
+                        pequeno vazamento de leitura em uma catástrofe de destruição total.
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+                        <div class="p-5 border border-red-100 bg-red-50/20 rounded-xl">
+                            <h4 class="font-bold text-red-900 text-sm mb-2"><i
+                                    class="fa-solid fa-triangle-exclamation mr-2"></i>Controle de Acesso Quebrado</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Quando a credencial da aplicação possui direitos administrativos plenos, o atacante
+                                consegue invocar subprocessos de terminal no sistema operacional hospedeiro utilizando
+                                módulos internos perigosos (como <code
+                                    class="bg-slate-100 px-1 py-0.5 rounded text-red-600">xp_cmdshell</code> no SQL
+                                Server).
+                            </p>
+                        </div>
+                        <div class="p-5 border border-emerald-100 bg-emerald-50/20 rounded-xl">
+                            <h4 class="font-bold text-emerald-950 text-sm mb-2"><i
+                                    class="fa-solid fa-shield-check mr-2"></i>Princípio do Menor Privilégio</h4>
+                            <p class="text-xs text-slate-700 leading-relaxed mb-3">
+                                As credenciais da conexão física devem possuir apenas as permissões estritamente vitais
+                                de manipulação mínima das tabelas de seu domínio operacional.
+                            </p>
+                            <span
+                                class="inline-block bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-1 rounded">Requisito
+                                ISO 27002</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 8 / Slide 8 -->
+                <section id="metadados" class="doc-section scroll-mt-24">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span
+                            class="px-2 py-0.5 bg-indigo-100 text-indigo-900 text-[10px] font-bold rounded uppercase">Slide
+                            8</span>
+                        <span class="text-xs text-slate-400">Mensagens Verbosas</span>
+                    </div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 mb-4">Mensagens de Erro Verbosas como Informantes
+                    </h2>
+                    <p class="text-slate-600 leading-relaxed mb-6">
+                        Quando uma exceção não é devidamente encapsulada e tratada no back-end, detalhes técnicos
+                        fundamentais — como versões exatas do SGBD, estrutura e relacionamentos de tabelas — são
+                        revelados diretamente na tela do cliente. Esses metadados servem como atalhos para os invasores
+                        reduzirem semanas de testes de intrusão a minutos de esforço.
+                    </p>
+
+                    <!-- Safe try/except code in Python -->
+                    <div class="border border-indigo-200 rounded-xl overflow-hidden shadow-sm my-6">
+                        <div
+                            class="bg-indigo-50/50 px-4 py-2 border-b border-indigo-100 flex justify-between items-center">
+                            <span class="text-xs font-bold text-indigo-900 uppercase tracking-wider"><i
+                                    class="fa-solid fa-circle-check mr-1.5"></i>Padrão de Tratamento Seguro de Erros em
+                                Python</span>
+                            <button onclick="copyCode('py-errors')"
+                                class="text-xs text-indigo-800 hover:text-indigo-900 font-semibold flex items-center gap-1"><i
+                                    class="fa-regular fa-copy"></i>Copiar</button>
+                        </div>
+                        <pre id="py-errors" class="p-4 bg-slate-900 text-slate-100 text-xs overflow-x-auto"><code>import logging
+
+# Configuração de Logs internos protegidos
+logging.basicConfig(level=logging.ERROR, filename='security_audit.log')
+
+def consultar_usuario_seguro(db_cursor, input_id):
+    try:
+        # Consulta executada internamente
+        db_cursor.execute("SELECT * FROM usuarios WHERE id = %s", (input_id,))
+        return db_cursor.fetchone()
+    except Exception as erro_interno:
+        # REGISTRO SEGURO: Grava detalhes ricos apenas internamente no servidor
+        logging.error(f"Detalhe Técnico do Banco de Dados: {str(erro_interno)}")
+        
+        # MENSAGEM GENÉRICA: Retorna uma informação limpa para o usuário final
+        raise RuntimeError("Código de rastreamento de transação temporário gerado.")</code></pre>
+                    </div>
+                </section>
+
+                <!-- Section 9 / Slide 9 -->
+                <section id="impacto-cia" class="doc-section scroll-mt-24">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span
+                            class="px-2 py-0.5 bg-indigo-100 text-indigo-900 text-[10px] font-bold rounded uppercase">Slide
+                            9</span>
+                        <span class="text-xs text-slate-400">Impacto na Tríade</span>
+                    </div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 mb-4">O Impacto Letal nos Alicerces da Tríade CIA
+                    </h2>
+                    <p class="text-slate-600 leading-relaxed mb-6">
+                        A intrusão sintática do SQL Injection não se resume à leitura de cadastros simples; ela
+                        compromete integralmente os pilares de resiliência e a conformidade corporativa:
+                    </p>
+
+                    <div class="space-y-4 my-6">
+                        <div class="p-4 bg-slate-50 rounded-xl border border-l-4 border-l-red-500 border-slate-200">
+                            <h4 class="font-extrabold text-sm text-slate-900 mb-1">Quebra de Confidencialidade</h4>
+                            <p class="text-xs text-slate-500 leading-relaxed">
+                                O uso estratégico de instruções <code
+                                    class="bg-slate-200 text-slate-900 px-1 py-0.5 rounded">UNION</code> permite a
+                                exfiltração completa de hashes de senhas de autenticação e credenciais de administração
+                                diretamente nas telas expostas aos usuários comuns.
+                            </p>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl border border-l-4 border-l-red-500 border-slate-200">
+                            <h4 class="font-extrabold text-sm text-slate-900 mb-1">Quebra de Integridade</h4>
+                            <p class="text-xs text-slate-500 leading-relaxed">
+                                A injeção de comandos de modificação de dados (<code
+                                    class="bg-slate-200 text-slate-900 px-1 py-0.5 rounded">UPDATE / DELETE</code>)
+                                altera e destrói permanentemente registros financeiros históricos, cadastros e
+                                relatórios consolidados de forma silenciosa e irreversível.
+                            </p>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl border border-l-4 border-l-red-500 border-slate-200">
+                            <h4 class="font-extrabold text-sm text-slate-900 mb-1">Quebra de Disponibilidade</h4>
+                            <p class="text-xs text-slate-500 leading-relaxed">
+                                Instruções como <code
+                                    class="bg-slate-200 text-slate-900 px-1 py-0.5 rounded">DROP TABLE</code>
+                                desintegram bases de dados por completo. De forma sutil, a injeção de rotinas em loops
+                                de espera sobrecarrega processamentos internos gerando indisponibilidades críticas do
+                                ambiente.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 10 / Slide 10 -->
+                <section id="diagnostico-estrutural" class="doc-section scroll-mt-24">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span
+                            class="px-2 py-0.5 bg-indigo-100 text-indigo-900 text-[10px] font-bold rounded uppercase">Slide
+                            10</span>
+                        <span class="text-xs text-slate-400">Matriz de Defesa</span>
+                    </div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 mb-4">Diagnóstico Estrutural: Eficácia das
+                        Técnicas</h2>
+                    <p class="text-slate-600 leading-relaxed mb-6">
+                        Nem toda técnica defensiva provê a mesma segurança. Como arquitetos, é vital classificar a
+                        eficácia estrutural real de cada método implementado no mercado de software:
+                    </p>
+
+                    <!-- Interactive Mitigation Matrix -->
+                    <div class="overflow-x-auto rounded-xl border border-slate-200 my-6">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-100 border-b border-slate-200">
+                                    <th class="p-4 font-bold text-slate-700">Abordagem de Mitigação</th>
+                                    <th class="p-4 font-bold text-slate-700">Eficácia Prática</th>
+                                    <th class="p-4 font-bold text-slate-700">Diagnóstico Técnico</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <tr class="hover:bg-red-50/10">
+                                    <td class="p-4 font-bold text-slate-900">Concatenação de Strings</td>
+                                    <td class="p-4">
+                                        <span
+                                            class="px-2.5 py-1 bg-red-100 text-red-800 rounded-full font-bold text-[10px]">0%
+                                            (NULA)</span>
+                                    </td>
+                                    <td class="p-4 text-slate-500">Prática nativa vulnerável. Confiança cega e direta
+                                        nos inputs dinâmicos passados pelo cliente.</td>
+                                </tr>
+                                <tr class="hover:bg-red-50/10">
+                                    <td class="p-4 font-bold text-slate-900">Listas Negras (Blacklists)</td>
+                                    <td class="p-4">
+                                        <span
+                                            class="px-2.5 py-1 bg-red-50 text-red-700 rounded-full font-semibold text-[10px]">BAIXA</span>
+                                    </td>
+                                    <td class="p-4 text-slate-500">Baseia-se no bloqueio reativo de metacaracteres.
+                                        Facilmente contornada usando codificações alternativas.</td>
+                                </tr>
+                                <tr class="hover:bg-amber-50/10">
+                                    <td class="p-4 font-bold text-slate-900">Sanitização (Escaping)</td>
+                                    <td class="p-4">
+                                        <span
+                                            class="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full font-semibold text-[10px]">MÉDIA</span>
+                                    </td>
+                                    <td class="p-4 text-slate-500">Limpa as entradas antes do processamento. Altamente
+                                        dependente do parser específico da linguagem.</td>
+                                </tr>
+                                <tr class="hover:bg-emerald-50/10 bg-emerald-50/10">
+                                    <td class="p-4 font-extrabold text-emerald-950">Prepared Statements</td>
+                                    <td class="p-4">
+                                        <span
+                                            class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full font-bold text-[10px]">100%
+                                            (ALTA)</span>
+                                    </td>
+                                    <td class="p-4 text-slate-700 font-medium">A defesa definitiva. Separação física e
+                                        pré-compilada que impede a modificação semântica do comando.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Section 11 / Slide 11 -->
+                <section id="prepared-statements" class="doc-section scroll-mt-24">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span
+                            class="px-2 py-0.5 bg-indigo-100 text-indigo-900 text-[10px] font-bold rounded uppercase">Slide
+                            11</span>
+                        <span class="text-xs text-slate-400">Separação Semântica</span>
+                    </div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 mb-4">A "Bala de Prata": Prepared Statements</h2>
+                    <p class="text-slate-600 leading-relaxed mb-6">
+                        O único padrão defensivo inviolável contra SQL Injection é a **parametrização de consultas**
+                        (<em>Prepared Statements</em>). Em vez de injetar strings dinamicamente na query, a estrutura
+                        lógica é enviada e pré-compilada de antemão pelo interpretador do banco de dados utilizando
+                        placeholders abstratos.
+                    </p>
+
+                    <!-- Python safe parameterization snippet -->
+                    <div class="border border-emerald-200 rounded-xl overflow-hidden shadow-sm my-6">
+                        <div
+                            class="bg-emerald-50 px-4 py-2 border-b border-emerald-100 flex justify-between items-center">
+                            <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider"><i
+                                    class="fa-solid fa-circle-check mr-1.5"></i>Uso Seguro de Parametrização em Python
+                                (SQLite / Postgres)</span>
+                            <button onclick="copyCode('py-param')"
+                                class="text-xs text-emerald-700 hover:text-emerald-800 font-semibold flex items-center gap-1"><i
+                                    class="fa-regular fa-copy"></i>Copiar</button>
+                        </div>
+                        <pre id="py-param" class="p-4 bg-slate-900 text-slate-100 text-xs overflow-x-auto"><code># O driver do banco compila o plano lógico e isola os valores externos
+def obter_usuario_paramétrico(db_cursor, user_id):
+    # Placeholders '?' (ou '%s' para PostgreSQL) servem como recipientes selados para dados
+    query_segura = "SELECT * FROM usuarios WHERE id = ?"
+    
+    # Execução parametrizada: Passa os dados empacotados separadamente
+    db_cursor.execute(query_segura, (user_id,))
+    return db_cursor.fetchone()</code></pre>
+                    </div>
+                </section>
+
+                <!-- Section 12 / Slide 12 -->
+                <section id="whitelisting" class="doc-section scroll-mt-24">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span
+                            class="px-2 py-0.5 bg-indigo-100 text-indigo-900 text-[10px] font-bold rounded uppercase">Slide
+                            12</span>
+                        <span class="text-xs text-slate-400">Validação Estrita</span>
+                    </div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 mb-4">Whitelisting: A Matemática de Aceitar
+                        Formatos Conhecidos</h2>
+                    <p class="text-slate-600 leading-relaxed mb-6">
+                        Ao contrário do modelo ineficaz das Blacklists, a **Lista Branca** (<em>Whitelisting</em>)
+                        inverte totalmente a premissa de triagem de segurança. Em vez de bloquear tentativas ruins, o
+                        sistema só deixa passar inputs dinâmicos que correspondam fielmente a layouts de formatos
+                        conhecidos (como expressões regulares).
+                    </p>
+
+                    <!-- Python regex verification snippet -->
+                    <div class="border border-indigo-200 rounded-xl overflow-hidden shadow-sm my-6">
+                        <div
+                            class="bg-indigo-50/50 px-4 py-2 border-b border-indigo-100 flex justify-between items-center">
+                            <span class="text-xs font-bold text-indigo-900 uppercase tracking-wider"><i
+                                    class="fa-solid fa-filter mr-1.5"></i>Implementação de Lista Branca em Python</span>
+                            <button onclick="copyCode('py-regex')"
+                                class="text-xs text-indigo-800 hover:text-indigo-900 font-semibold flex items-center gap-1"><i
+                                    class="fa-regular fa-copy"></i>Copiar</button>
+                        </div>
+                        <pre id="py-regex" class="p-4 bg-slate-900 text-slate-100 text-xs overflow-x-auto"><code>import re
+
+def processar_transacao_cpf(db_cursor, input_cpf):
+    # REQUISITO MATEMÁTICO: CPF deve conter obrigatoriamente 11 dígitos numéricos limpos
+    if not re.match(r'^\d{11}$', input_cpf):
+        # Descarte direto na barreira de entrada da aplicação
+        raise ValueError("Transação descartada por inconformidade estrutural de CPF.")
+    
+    # Se passar pela barreira, prossegue seguro no prepared statement
+    db_cursor.execute("SELECT * FROM clientes WHERE cpf = ?", (input_cpf,))
+    return db_cursor.fetchone()</code></pre>
+                    </div>
+                </section>
+
+                <!-- Section 13 / Slide 13 -->
+                <section id="defesa-profundidade" class="doc-section scroll-mt-24">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span
+                            class="px-2 py-0.5 bg-indigo-100 text-indigo-900 text-[10px] font-bold rounded uppercase">Slide
+                            13</span>
+                        <span class="text-xs text-slate-400">Barreiras Multinível</span>
+                    </div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 mb-4">Síntese Arquitetônica: Defesa em
+                        Profundidade</h2>
+                    <p class="text-slate-600 leading-relaxed mb-6">
+                        Nenhuma ferramenta de segurança atua de forma isolada. A verdadeira blindagem de dados
+                        assemelha-se a uma fortificação medieval protegida por muralhas concêntricas: a queda de um anel
+                        defensivo periférico não representa a invasão do reino se as demais muralhas permanecerem
+                        intactas.
+                    </p>
+
+                    <!-- Interactive Defensive Castle visualization -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 md:p-8 my-6">
+                        <h4 class="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-4">Modelo de
+                            Barreiras Concêntricas</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                            <!-- Pure HTML/CSS representation of Castle concentric circles -->
+                            <div class="flex justify-center py-4">
+                                <div
+                                    class="relative w-56 h-56 rounded-full border border-indigo-900/10 flex items-center justify-center">
+                                    <div
+                                        class="absolute w-44 h-44 rounded-full border-2 border-dashed border-indigo-900/30 flex items-center justify-center">
+                                        <div
+                                            class="absolute w-32 h-32 rounded-full border-2 border-indigo-900/50 flex items-center justify-center bg-indigo-50/40">
+                                            <div
+                                                class="absolute w-20 h-20 rounded-full bg-indigo-900 flex items-center justify-center text-white text-[10px] font-black shadow-lg">
+                                                DADOS
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span
+                                        class="absolute top-1 text-[8px] font-bold text-slate-400 uppercase tracking-widest">WAF
+                                        (Perímetro)</span>
+                                    <span
+                                        class="absolute top-10 text-[8px] font-bold text-indigo-500 uppercase tracking-widest">Whitelist</span>
+                                    <span
+                                        class="absolute top-16 text-[8px] font-bold text-indigo-900 uppercase tracking-widest">Prepared
+                                        Stmt</span>
+                                </div>
+                            </div>
+                            <div class="space-y-3 text-xs">
+                                <div class="p-2 bg-white border border-slate-200 rounded-lg">
+                                    <strong class="text-indigo-900"><i
+                                            class="fa-solid fa-fort-awesome mr-1"></i>Perímetro (WAF):</strong> Bloqueio
+                                    imediato na borda da rede de ataques volumétricos e conhecidos.
+                                </div>
+                                <div class="p-2 bg-white border border-slate-200 rounded-lg">
+                                    <strong class="text-indigo-900"><i class="fa-solid fa-filter mr-1"></i>Aplicação
+                                        (Whitelist):</strong> Filtro rigoroso de inputs limpos e formatos conhecidos.
+                                </div>
+                                <div class="p-2 bg-white border border-slate-200 rounded-lg">
+                                    <strong class="text-indigo-900"><i class="fa-solid fa-code mr-1"></i>Execução
+                                        (Prepared Stmt):</strong> Separação mecânica e semântica definitiva.
+                                </div>
+                                <div class="p-2 bg-white border border-slate-200 rounded-lg">
+                                    <strong class="text-indigo-900"><i class="fa-solid fa-key mr-1"></i>Controle (Menor
+                                        Privilégio):</strong> Confinamento em caso de vazamento.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 14 / Slide 14 -->
+                <section id="sdlc-seguro" class="doc-section scroll-mt-24">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span
+                            class="px-2 py-0.5 bg-indigo-100 text-indigo-900 text-[10px] font-bold rounded uppercase">Slide
+                            14</span>
+                        <span class="text-xs text-slate-400">Metodologia</span>
+                    </div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 mb-4">Segurança por Design (SBD) e Conformidade
+                    </h2>
+                    <p class="text-slate-600 leading-relaxed mb-6">
+                        Para obter uma resiliência duradoura, a **Segurança por Design** deve atuar como um processo
+                        contínuo integrado à cultura de desenvolvimento de software de forma cíclica e preventiva,
+                        baseando-se nas rígidas diretrizes estabelecidas pelo **NIST** e pela **OWASP**:
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-6">
+                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                            <strong class="text-indigo-900 text-xs block mb-1">Planejamento e Requisitos</strong>
+                            <p class="text-[10px] text-slate-500 leading-relaxed">Mapeamento inicial preventivo baseado
+                                nos riscos OWASP para nortear as diretrizes arquitetônicas antes de codificar.</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                            <strong class="text-indigo-900 text-xs block mb-1">Cultura de Teste Contínuo</strong>
+                            <p class="text-[10px] text-slate-500 leading-relaxed">Ciclos de varredura automatizada
+                                (SAST/DAST) e rotinas proativas de Pentesting para neutralização de brechas ocultas.</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                            <strong class="text-indigo-900 text-xs block mb-1">Responsabilidade Legal</strong>
+                            <p class="text-[10px] text-slate-500 leading-relaxed">A adoção de SBD atua como um escudo
+                                protetor corporativo, minimizando riscos de multas punitivas graves sob a LGPD.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 15 / Slide 15 -->
+                <section id="conclusao-rigor" class="doc-section scroll-mt-24 pb-8 border-b border-slate-200">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span
+                            class="px-2 py-0.5 bg-indigo-100 text-indigo-900 text-[10px] font-bold rounded uppercase">Slide
+                            15</span>
+                        <span class="text-xs text-slate-400">Conclusão</span>
+                    </div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 mb-4">A Proteção de Dados Exige Rigor
+                        Arquitetônico Absoluto</h2>
+                    <p class="text-slate-600 leading-relaxed mb-6">
+                        O SQL Injection não lidera os rankings globais de ameaças cibernéticas por carência tecnológica,
+                        mas por mera **inércia cultural** e pela repetição de práticas obsoletas e negligentes de
+                        concatenação de dados dinâmicos. A integridade estrutural das informações não é uma escolha
+                        opcional de TI, mas a espinha dorsal operacional de qualquer instituição.
+                    </p>
+                    <div class="p-6 bg-slate-950 text-indigo-100 rounded-xl blueprint-grid relative">
+                        <div class="absolute top-2 right-2 text-[9px] font-mono text-indigo-400">PEDRA ANGULAR</div>
+                        <h4 class="text-sm font-extrabold text-white mb-2 uppercase">Mensagem Final aos Arquitetos</h4>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            Precisamos abandonar definitivamente a postura de apenas "limpar" dados suspeitos para
+                            adotar a postura estrutural de **isolar fisicamente rotas de consulta** por meio de
+                            parametrização estrita. Tratar a segurança estrutural como fundamento operacional básico é o
+                            compromisso de integridade para a era digital moderna.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Interactive Verification & Auditing Checklist (The core interactive element) -->
+                <section id="checklist-auditoria"
+                    class="doc-section scroll-mt-24 bg-indigo-50/50 border border-indigo-100 rounded-2xl p-6 md:p-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                        <div>
+                            <h3 class="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-clipboard-check text-indigo-900"></i> Auditoria de Conformidade
+                                Arquitetônica
+                            </h3>
+                            <p class="text-xs text-slate-500">Marque as diretrizes que estão homologadas em seu sistema
+                                para auditar o nível de segurança do seu ambiente.</p>
+                        </div>
+
+                        <!-- Interactive Score Badge -->
+                        <div class="bg-indigo-900 text-white px-4 py-2 rounded-xl text-center shadow-md">
+                            <div class="text-[10px] font-bold uppercase tracking-widest">Score de Segurança</div>
+                            <div class="text-xl font-black" id="compliance-score">0%</div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 mb-6">
+                        <label
+                            class="flex items-start gap-3 p-3.5 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-indigo-400 transition"
+                            onclick="calculateCompliance()">
+                            <input type="checkbox" id="chk-1"
+                                class="mt-1 h-4 w-4 text-indigo-900 border-slate-300 rounded focus:ring-indigo-600 transition">
+                            <div>
+                                <strong class="text-xs font-extrabold text-slate-800 block">Ausência Total de
+                                    Concatenação</strong>
+                                <span class="text-[11px] text-slate-500 block mt-0.5">Nenhuma string de instrução SQL
+                                    utiliza interpolações locais f-strings ou métodos como .format() com dados do
+                                    usuário.</span>
+                            </div>
+                        </label>
+                        <label
+                            class="flex items-start gap-3 p-3.5 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-indigo-400 transition"
+                            onclick="calculateCompliance()">
+                            <input type="checkbox" id="chk-2"
+                                class="mt-1 h-4 w-4 text-indigo-900 border-slate-300 rounded focus:ring-indigo-600 transition">
+                            <div>
+                                <strong class="text-xs font-extrabold text-slate-800 block">Parametrização Estrita
+                                    (Prepared Statements)</strong>
+                                <span class="text-[11px] text-slate-500 block mt-0.5">Todas as instruções enviadas para
+                                    execução usam placeholders estritos (como '?') com isolamento absoluto de
+                                    parâmetros.</span>
+                            </div>
+                        </label>
+                        <label
+                            class="flex items-start gap-3 p-3.5 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-indigo-400 transition"
+                            onclick="calculateCompliance()">
+                            <input type="checkbox" id="chk-3"
+                                class="mt-1 h-4 w-4 text-indigo-900 border-slate-300 rounded focus:ring-indigo-600 transition">
+                            <div>
+                                <strong class="text-xs font-extrabold text-slate-800 block">Mascaramento de
+                                    Exceções</strong>
+                                <span class="text-[11px] text-slate-500 block mt-0.5">As falhas e metadados internos de
+                                    erros de query são tratados globalmente, gerando apenas IDs de erro genéricos para o
+                                    cliente final.</span>
+                            </div>
+                        </label>
+                        <label
+                            class="flex items-start gap-3 p-3.5 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-indigo-400 transition"
+                            onclick="calculateCompliance()">
+                            <input type="checkbox" id="chk-4"
+                                class="mt-1 h-4 w-4 text-indigo-900 border-slate-300 rounded focus:ring-indigo-600 transition">
+                            <div>
+                                <strong class="text-xs font-extrabold text-slate-800 block">Menor Privilégio na
+                                    Conexão</strong>
+                                <span class="text-[11px] text-slate-500 block mt-0.5">A credencial utilizada para
+                                    conexão com o banco não possui direitos de superusuário (sa/root) e está confinada
+                                    ao menor escopo vital.</span>
+                            </div>
+                        </label>
+                        <label
+                            class="flex items-start gap-3 p-3.5 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-indigo-400 transition"
+                            onclick="calculateCompliance()">
+                            <input type="checkbox" id="chk-5"
+                                class="mt-1 h-4 w-4 text-indigo-900 border-slate-300 rounded focus:ring-indigo-600 transition">
+                            <div>
+                                <strong class="text-xs font-extrabold text-slate-800 block">Validação de Tipo por Lista
+                                    Branca (Whitelisting)</strong>
+                                <span class="text-[11px] text-slate-500 block mt-0.5">Validações estritas de layout de
+                                    dados por meio de expressões regulares (como re.match) bloqueiam dados antes da
+                                    consulta.</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div
+                        class="p-4 bg-white rounded-xl border border-slate-200 text-xs text-slate-600 flex justify-between items-center">
+                        <span class="font-medium text-slate-500">Maturidade mínima recomendada para produção: <strong
+                                class="text-indigo-900">100%</strong></span>
+                        <span class="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Padrão de Qualidade
+                            FiB</span>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 border-t border-slate-800 py-10 px-6 mt-16">
+        <div class="max-w-[1700px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-shield-halved text-indigo-400 text-lg"></i>
+                <span class="text-xs font-bold text-white uppercase tracking-widest">Manual de Proteção e Blindagem de
+                    Dados</span>
+            </div>
+            <p class="text-[11px] text-slate-500">
+                © 2026 • Compartilhamento estrito para equipes de segurança cibernética e arquitetura de dados da
+                organização.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Scripts de Interação -->
+    <script>
+        // Copy code helper (standard copy)
+        function copyCode(elementId) {
+            const preElement = document.getElementById(elementId);
+            const textToCopy = preElement.innerText;
+
+            const tempInput = document.createElement("textarea");
+            tempInput.value = textToCopy;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+
+            showToast("Código copiado para a área de transferência!");
+        }
+
+        // Show toast notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.className = "fixed bottom-5 right-5 z-50 bg-slate-900 text-white text-xs px-4 py-2.5 rounded-lg shadow-lg flex items-center gap-2 transition-all transform translate-y-0 opacity-100";
+
+            setTimeout(() => {
+                toast.className = "fixed bottom-5 right-5 z-50 bg-slate-900 text-white text-xs px-4 py-2.5 rounded-lg shadow-lg flex items-center gap-2 transition-all transform translate-y-20 opacity-0 pointer-events-none";
+            }, 3000);
+        }
+
+        // Interactive CIA Detail Toggles
+        function toggleCIADetail(pillar) {
+            const pillarDesc = document.getElementById(`desc-cia-${pillar}`);
+            const pillarIcon = document.getElementById(`icon-cia-${pillar}`);
+
+            if (pillarDesc.classList.contains('hidden')) {
+                pillarDesc.classList.remove('hidden');
+                pillarIcon.className = "fa-solid fa-chevron-up text-xs text-indigo-600 transition-transform";
+            } else {
+                pillarDesc.classList.add('hidden');
+                pillarIcon.className = "fa-solid fa-chevron-down text-xs text-slate-400 transition-transform";
+            }
+        }
+
+        // Dynamic Railway Track switcher
+        function setSimInput(type) {
+            const btnNormal = document.getElementById('btn-sim-normal');
+            const btnMalicious = document.getElementById('btn-sim-malicious');
+            const queryDisplay = document.getElementById('sim-query-display');
+            const statusDisplay = document.getElementById('sim-status-display');
+
+            if (type === 'normal') {
+                btnNormal.className = "text-left px-4 py-2.5 rounded-lg border text-xs font-medium transition-all bg-indigo-900/50 border-indigo-400 text-white";
+                btnMalicious.className = "text-left px-4 py-2.5 rounded-lg border text-xs font-medium transition-all bg-indigo-900/10 border-indigo-700 hover:border-indigo-500";
+                queryDisplay.innerHTML = `<span class="text-slate-400">SELECT * FROM usuarios WHERE id = </span><span class="text-emerald-400">1042</span>`;
+                statusDisplay.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span><span class="text-emerald-300 font-bold">Fluxo Esperado: Consulta o usuário de forma isolada</span>`;
+            } else {
+                btnNormal.className = "text-left px-4 py-2.5 rounded-lg border text-xs font-medium transition-all bg-indigo-900/10 border-indigo-700 hover:border-indigo-500";
+                btnMalicious.className = "text-left px-4 py-2.5 rounded-lg border text-xs font-medium transition-all bg-indigo-900/50 border-red-500 text-white";
+                queryDisplay.innerHTML = `<span class="text-slate-400">SELECT * FROM usuarios WHERE id = </span><span class="text-red-400">1</span><span class="text-amber-300 font-bold"> OR 1=1 --</span>`;
+                statusDisplay.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0 animate-ping"></span><span class="text-red-300 font-bold">DESVIO DETECTADO: Loga automaticamente ignorando validações</span>`;
+            }
+        }
+
+        // Auditing Compliance calculator
+        function calculateCompliance() {
+            const checkboxes = [
+                document.getElementById('chk-1').checked,
+                document.getElementById('chk-2').checked,
+                document.getElementById('chk-3').checked,
+                document.getElementById('chk-4').checked,
+                document.getElementById('chk-5').checked
+            ];
+
+            const countChecked = checkboxes.filter(Boolean).length;
+            const percentage = Math.round((countChecked / checkboxes.length) * 100);
+
+            const scoreBadge = document.getElementById('compliance-score');
+            scoreBadge.textContent = `${percentage}%`;
+
+            if (percentage === 100) {
+                scoreBadge.className = "text-xl font-black text-emerald-400 animate-bounce";
+            } else if (percentage >= 60) {
+                scoreBadge.className = "text-xl font-black text-amber-400";
+            } else {
+                scoreBadge.className = "text-xl font-black text-red-400";
+            }
+        }
+
+        // Instant text search - Desktop
+        function filterDocumentation() {
+            const searchValue = document.getElementById('doc-search').value.toLowerCase();
+            const sections = document.querySelectorAll('.doc-section');
+
+            sections.forEach(section => {
+                const text = section.innerText.toLowerCase();
+                section.style.display = text.includes(searchValue) ? "block" : "none";
+            });
+        }
+
+        // Instant text search - Mobile
+        function filterDocumentationMobile() {
+            const searchValue = document.getElementById('doc-search-mobile').value.toLowerCase();
+            const sections = document.querySelectorAll('.doc-section');
+
+            sections.forEach(section => {
+                const text = section.innerText.toLowerCase();
+                section.style.display = text.includes(searchValue) ? "block" : "none";
+            });
+        }
+    </script>
+</body>
+
+</html>
